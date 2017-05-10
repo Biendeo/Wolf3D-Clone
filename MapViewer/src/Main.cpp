@@ -1,105 +1,40 @@
-// A lot of this is copied from http://www.directxtutorial.com/
+#include <iostream>
+#include <SDL.h>
 
-#include <Windows.h>
-#include <windowsx.h>
-#include <d3d9.h>
+static const int WINDOW_WIDTH = 640;
+static const int WINDOW_HEIGHT = 480;
 
-#pragma comment (lib, "d3d9.lib")
+int main(int argc, char* argv[]) {
+	SDL_Init(SDL_INIT_VIDEO);
+	
+	SDL_Window *window = nullptr;
+	window = SDL_CreateWindow("Map Viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, NULL);
 
-LPDIRECT3D9 d3d;
-LPDIRECT3DDEVICE9 d3ddev;
-
-LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
-void InitD3D(HWND hWnd);
-void RenderFrame();
-void CleanD3D();
-
-static const int WINDOW_X = 200;
-static const int WINDOW_Y = 200;
-static const int WINDOW_WIDTH = 960;
-static const int WINDOW_HEIGHT = 720;
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-
-	HWND hWnd;
-	WNDCLASSEX wc;
-
-	ZeroMemory(&wc, sizeof(WNDCLASSEX));
-
-	wc.cbSize = sizeof(WNDCLASSEX);
-	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = WindowProc;
-	wc.hInstance = hInstance;
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
-	wc.lpszClassName = L"WindowClass1";
-
-	RegisterClassEx(&wc);
-
-	hWnd = CreateWindowEx(NULL, L"WindowClass1", L"MapViewer", WS_OVERLAPPEDWINDOW, WINDOW_X, WINDOW_Y, WINDOW_WIDTH, WINDOW_HEIGHT, NULL, NULL, hInstance, NULL);
-
-	InitD3D(hWnd);
-
-	ShowWindow(hWnd, nCmdShow);
-
-	MSG msg;
-
-	while (TRUE) {
-		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-
-		if (msg.message == WM_QUIT) {
-			break;
-		}
-
-		RenderFrame();
+	if (window == nullptr) {
+		std::cerr << "SDL couldn't create a window.\n";
+		return 1;
 	}
 
-	CleanD3D();
+	SDL_Surface *surface = nullptr;
+	surface = SDL_GetWindowSurface(window);
 
-	return msg.wParam;
-}
-
-LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-	switch (message) {
-		case WM_DESTROY:
-			PostQuitMessage(0);
-			return 0;
+	if (surface == nullptr) {
+		std::cerr << "SDL couldn't find the surface.\n";
+		return 1;
 	}
 
-	return DefWindowProc(hWnd, message, wParam, lParam);
-}
+	while (true) {
+		static int colour = 0;
 
-void InitD3D(HWND hWnd) {
-	d3d = Direct3DCreate9(D3D_SDK_VERSION);
+		SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, colour * 2 % 256, colour * 3 % 256, colour * 5 % 256));
 
-	D3DPRESENT_PARAMETERS d3dpp;
+		SDL_UpdateWindowSurface(window);
 
-	ZeroMemory(&d3dpp, sizeof(D3DPRESENT_PARAMETERS));
-	d3dpp.Windowed = TRUE;
-	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	d3dpp.hDeviceWindow = hWnd;
+		++colour;
+	}
 
-	d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3ddev);
-}
+	SDL_DestroyWindow(window);
+	SDL_Quit();
 
-void RenderFrame() {
-	static int currentValue = 0;
-	d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(currentValue * 2 % 256, currentValue * 3 % 256, currentValue * 5 % 256), 1.0f, 0);
-
-	++currentValue;
-
-	d3ddev->BeginScene();
-
-	d3ddev->EndScene();
-
-	d3ddev->Present(NULL, NULL, NULL, NULL);
-}
-
-void CleanD3D() {
-	d3ddev->Release();
-	d3d->Release();
+	return 0;
 }
