@@ -37,6 +37,10 @@ uint8_t Color::A() {
 	return (argb & 0xFF000000) >> 24;
 }
 
+uint32_t Color::ARGB() {
+	return argb;
+}
+
 uint8_t Color::R(uint8_t r) {
 	argb = (r << 16) | (argb & 0xFF00FFFF);
 	return R();

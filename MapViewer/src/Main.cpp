@@ -9,14 +9,13 @@ static const int WINDOW_WIDTH = 640;
 static const int WINDOW_HEIGHT = 480;
 
 #include "Color.h"
-
-std::array<std::array<Color, WINDOW_WIDTH>, WINDOW_HEIGHT> frameBuffer;
+#include "Framebuffer.h"
 
 int main(int argc, char* argv[]) {
 	SDL_Init(SDL_INIT_VIDEO);
 	
 	SDL_Window *window = nullptr;
-	window = SDL_CreateWindow("Map Viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, NULL);
+	window = SDL_CreateWindow("Map Viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE);
 
 	if (window == nullptr) {
 		std::cerr << "SDL couldn't create a window.\n";
@@ -36,6 +35,7 @@ int main(int argc, char* argv[]) {
 
 	SDL_SetRenderDrawColor(renderer, 0, 50, 150, 255);
 
+	Framebuffer frameBuffer(WINDOW_WIDTH, WINDOW_HEIGHT);
 	Map testMap("dat/test.json");
 
 	bool quit = false;
@@ -46,6 +46,16 @@ int main(int argc, char* argv[]) {
 			if (event.type == SDL_QUIT) {
 				quit = true;
 				break;
+			} else if (event.type == SDL_WINDOWEVENT) {
+				switch (event.window.event) {
+					case SDL_WINDOWEVENT_SIZE_CHANGED:
+						SDL_DestroyTexture(currentBuffer);
+						currentBuffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, event.window.data1, event.window.data2);
+						frameBuffer.Resize(event.window.data1, event.window.data2);
+						break;
+				}
+			} else {
+				std::cout << "BLERGH";
 			}
 		}
 
@@ -53,16 +63,16 @@ int main(int argc, char* argv[]) {
 
 
 		// Begin a test scene.
-		memset(frameBuffer.data(), 0, sizeof(Color) * WINDOW_HEIGHT * WINDOW_WIDTH);
+		frameBuffer.Flush();
 
 		static int position = 0;
+		position %= frameBuffer.Width();
 
-		for (int i = 0; i < WINDOW_HEIGHT / 2; ++i) {
-			frameBuffer[i + WINDOW_HEIGHT / 4][position].B(0xBB);
+		for (int i = 0; i < frameBuffer.Height() / 2; ++i) {
+			frameBuffer.Set(position, i + frameBuffer.Height() / 4, 0x000000BB);
 		}
 
 		++position;
-		position %= WINDOW_WIDTH;
 		// End the test scene.
 
 		SDL_RenderClear(renderer);
@@ -71,7 +81,7 @@ int main(int argc, char* argv[]) {
 		int pitch;
 		SDL_LockTexture(currentBuffer, NULL, &pixels, &pitch);
 
-		memcpy(pixels, frameBuffer.data(), sizeof(Color) * WINDOW_WIDTH * WINDOW_HEIGHT);
+		memcpy(pixels, frameBuffer.Data(), sizeof(Color) * frameBuffer.Width() * frameBuffer.Height());
 
 		SDL_UnlockTexture(currentBuffer);
 
