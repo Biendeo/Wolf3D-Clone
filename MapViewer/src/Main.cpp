@@ -1,27 +1,16 @@
 #include <iostream>
 #include <array>
+#include <string>
 #include <SDL.h>
+
+#include "Map.h"
 
 static const int WINDOW_WIDTH = 640;
 static const int WINDOW_HEIGHT = 480;
 
-struct Color {
-	uint8_t b;
-	uint8_t g;
-	uint8_t r;
-	uint8_t a;
+#include "Color.h"
 
-	Color() : Color(0, 0, 0) {}
-	Color(uint8_t r, uint8_t g, uint8_t b) : Color(0, 0, 0, 255) {}
-	Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-		this->r = r;
-		this->g = g;
-		this->b = b;
-		this->a = a;
-	}
-};
-
-std::array<std::array<Color, WINDOW_HEIGHT>, WINDOW_WIDTH> frameBuffer;
+std::array<std::array<Color, WINDOW_WIDTH>, WINDOW_HEIGHT> frameBuffer;
 
 int main(int argc, char* argv[]) {
 	SDL_Init(SDL_INIT_VIDEO);
@@ -47,6 +36,8 @@ int main(int argc, char* argv[]) {
 
 	SDL_SetRenderDrawColor(renderer, 0, 50, 150, 255);
 
+	Map testMap("dat/test.json");
+
 	bool quit = false;
 
 	while (true) {
@@ -60,15 +51,19 @@ int main(int argc, char* argv[]) {
 
 		if (quit) break;
 
-		// This part takes so long, can this be sped up?
-		for (auto &r : frameBuffer) {
-			for (Color &c : r) {
-				c.r += 2;
-				c.g += 3;
-				c.b += 5;
-				c.a = 255;
-			}
+
+		// Begin a test scene.
+		memset(frameBuffer.data(), 0, sizeof(Color) * WINDOW_HEIGHT * WINDOW_WIDTH);
+
+		static int position = 0;
+
+		for (int i = 0; i < WINDOW_HEIGHT / 2; ++i) {
+			frameBuffer[i + WINDOW_HEIGHT / 4][position].B(0xBB);
 		}
+
+		++position;
+		position %= WINDOW_WIDTH;
+		// End the test scene.
 
 		SDL_RenderClear(renderer);
 
