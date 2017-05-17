@@ -173,6 +173,7 @@
   <ItemGroup>
     <ClCompile Include="src\Color.cpp" />
     <ClCompile Include="src\Framebuffer.cpp" />
+    <ClCompile Include="src\Framerate.cpp" />
     <ClCompile Include="src\Map\Edge.cpp" />
     <ClCompile Include="src\Map\Sector.cpp" />
     <ClCompile Include="src\Map.cpp" />
@@ -188,6 +189,7 @@
   <ItemGroup>
     <ClInclude Include="src\Color.h" />
     <ClInclude Include="src\Framebuffer.h" />
+    <ClInclude Include="src\Framerate.h" />
     <ClInclude Include="src\Map\Edge.h" />
     <ClInclude Include="lib\jsonhpp\json.hpp" />
     <ClInclude Include="src\Map\Sector.h" />

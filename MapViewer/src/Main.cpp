@@ -10,6 +10,7 @@ static const int WINDOW_HEIGHT = 480;
 
 #include "Color.h"
 #include "Framebuffer.h"
+#include "Framerate.h"
 
 int main(int argc, char* argv[]) {
 	SDL_Init(SDL_INIT_VIDEO);
@@ -37,6 +38,11 @@ int main(int argc, char* argv[]) {
 
 	Framebuffer frameBuffer(WINDOW_WIDTH, WINDOW_HEIGHT);
 	Map testMap("dat/test.json");
+
+	SDL_DisplayMode mode;
+	SDL_GetCurrentDisplayMode(0, &mode);
+
+	Framerate frameRate(mode.refresh_rate);
 
 	bool quit = false;
 
@@ -66,6 +72,7 @@ int main(int argc, char* argv[]) {
 		frameBuffer.Flush();
 
 		static int position = 0;
+		position += (int)(frameBuffer.Width() * frameRate.Delta());
 		position %= frameBuffer.Width();
 
 		for (int i = 0; i < frameBuffer.Height() / 2; ++i) {
@@ -74,6 +81,13 @@ int main(int argc, char* argv[]) {
 
 		++position;
 		// End the test scene.
+
+		// Wait for the framebuffer to update.
+		frameRate.SleepToNextSwapBuffer();
+		frameRate.UpdateDrawTimes();
+
+		// This doesn't quite show our expected framerate, this should be tweaked.
+		SDL_SetWindowTitle(window, std::string("Frame: " + std::to_string(frameRate.FrameCount()) + ", FPS: " + std::to_string(1.0 / frameRate.Delta())).data());
 
 		SDL_RenderClear(renderer);
 
@@ -88,6 +102,9 @@ int main(int argc, char* argv[]) {
 		SDL_RenderCopy(renderer, currentBuffer, NULL, NULL);
 
 		SDL_RenderPresent(renderer);
+
+		frameRate.IncrementFrameCount();
+
 	}
 
 	SDL_DestroyTexture(currentBuffer);
